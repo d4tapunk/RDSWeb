@@ -1,3 +1,4 @@
+from dotenv import load_dotenv
 import os
 from flask import Flask
 from flask_jwt_extended import JWTManager
@@ -5,12 +6,15 @@ from config.config import Config
 from backend import db, migrate, init_app  # Import from backend/__init__.py
 from backend.auth import auth as auth_blueprint  # Import the auth blueprint
 
+load_dotenv()
 
 app = Flask(__name__, template_folder='../templates')
 
 
 # Set the secret key for session handling (important for flashing messages)
-app.secret_key = os.urandom(24)  # Generates a random secret key
+app.secret_key = os.getenv('SECRET_KEY')
+
+app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')
 
 # Configuring the app for PostgreSQL and JWT
 app.config.from_object(Config)
