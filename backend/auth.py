@@ -21,12 +21,12 @@ auth = Blueprint('auth', __name__)
 @auth.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':  # Handle form submission
-        userName = request.form.get('userName')  # Get form data for username
-        email = request.form.get('email')  # Get form data for email
-        password = request.form.get('password')  # Get form data for password
-        name = request.form.get('name')  # Get form data for first name
-        lastName = request.form.get('lastName')  # Get form data for last name
-        age = request.form.get('age')  # Get form data for age
+        userName = request.form.get('userName')  
+        email = request.form.get('email')  
+        password = request.form.get('password') 
+        name = request.form.get('name')  
+        lastName = request.form.get('lastName') 
+        age = request.form.get('age') 
 
         # Validate required fields
         if not userName or not email or not password:
