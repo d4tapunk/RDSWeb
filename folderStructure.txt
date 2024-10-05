@@ -1,0 +1,58 @@
+/rdsweb
+|-- /backend              
+|   |-- /__pycache__
+|   |-- /models
+|   |   |-- /__pycache__
+|   |   |-- __init__.py
+|   |   |-- user.py
+|   |-- /routes
+|   |   |-- __init__.py
+|   |   |-- auth.py
+|   |-- /config
+|   |   |-- __init__.py
+|   |-- /static           # Optional: Flask static files (if you need to serve assets from Flask)
+|   |-- /templates        # Optional: Flask HTML templates (if you want Flask to render HTML)
+|   |-- app.py            # Flask entry point
+|-- /config  
+|-- /frontend             # Your existing website (HTML, CSS, JS, images)
+|   |-- /assets
+|   |-- /images
+|   |-- elements.html
+|   |-- generic.html
+|   |-- LICENSE.txt
+|   |-- README.md
+|   |-- README.txt
+|-- FilderStructure.txt           
+|-- LICENSE.txt           
+|-- README.md             
+
+
+
+/rdsweb
+|-- /backend
+|   |-- /__pycache__
+|   |   |-- /__init__.cpython-312.pyc
+|   |   |-- /app.cpython-312.pyc
+|   |   |-- /auth.cpython-312.pyc
+|   |-- /models
+|   |   |-- /__pycache__
+|   |       |-- /user.cpython-312.pyc
+|   |   |-- /user.py
+|   |-- /routes
+|   |-- /static
+|   |-- __init__.py
+|   |-- app.py
+|   |-- auth.py
+|-- /config 
+|   |-- /__pycache__
+|   |   |-- /__init__.cpython-312.pyc
+|   |   |-- /config.cpython-312.pyc
+|   |-- /__init__.py
+|   |-- /config.py
+|-- /frontend 
+|-- /migrations 
+|-- /templates 
+|-- /venv 
+|-- FolderStructure.txt           
+|-- README.md           
+|-- requirements.txt            
