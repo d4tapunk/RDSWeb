@@ -77,7 +77,7 @@ def login():
 
 @auth.route('/profile-page', methods=['GET'])
 def profile_page():
-    return render_template('profile.html')  # Make sure this template exists in your templates folder
+    return render_template('profile.html')  
 
 
 @auth.route('/profile', methods=['GET'])
