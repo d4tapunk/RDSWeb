@@ -1,16 +1,8 @@
 # Import necessary modules
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session
-# - Blueprint: Allows the authentication routes to be modular.
-# - render_template: Renders HTML files from the templates folder.
-# - request: Retrieves form data sent by the user.
-# - redirect, url_for: Redirects users after actions (like registration or login).
-# - flash: Displays success or error messages to the user.
-# - session: Stores information about the user login session.
-
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
-# - generate_password_hash: Hashes passwords for secure storage.
-# - check_password_hash: Compares plain-text and hashed passwords during login.
-
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
+from datetime import timedelta
 from backend.models.user import User  # Import the User model to interact with user data.
 from backend import db  # Import the database instance for interacting with the database.
 
@@ -61,28 +53,68 @@ def register():
     # Render the registration form
     return render_template('register.html')
 
-# Define the route for user login
-@auth.route('/login', methods=['GET', 'POST'])
+
+# GET route to render the login form
+@auth.route('/login', methods=['GET'])
+def login_page():
+    return render_template('login.html')  # Render the login form HTML
+
+
+# POST route to handle login logic (already implemented)
+@auth.route('/login', methods=['POST'])
 def login():
-    if request.method == 'POST':  # Handle form submission
-        email = request.form.get('email')  # Get the email from the form
-        password = request.form.get('password')  # Get the password from the form
+    data = request.get_json()
+    email = data.get('email')
+    password = data.get('password')
 
-        # Fetch the user from the database by email
-        user = User.query.filter_by(email=email).first()
+    # Fetch user and validate the password
+    user = User.query.filter_by(email=email).first()
+    if user and check_password_hash(user.password, password):
+        access_token = create_access_token(identity=user.id, expires_delta=timedelta(minutes=30))
+        return jsonify(access_token=access_token), 200
 
-        # Check if the user exists and the password matches
-        if user and check_password_hash(user.password, password):  
-            session['user_id'] = user.id  # Store the user ID in session
-            flash('Logged in successfully!', category='success')
-            return redirect(url_for('dashboard'))  # Redirect to a dashboard or home page
+    return jsonify({"msg": "Invalid email or password"}), 401
 
-        # If login failed, flash an error message
-        flash('Invalid email or password. Please try again.', category='error')
+@auth.route('/profile-page', methods=['GET'])
+def profile_page():
+    return render_template('profile.html')  # Make sure this template exists in your templates folder
 
-    # Render the login form
-    return redirect(url_for('auth.dashboard'))  # Correctly reference the dashboard route in the 'auth' blueprint
 
-@auth.route('/dashboard')
-def dashboard():
-    return render_template('dashboard.html')
+@auth.route('/profile', methods=['GET'])
+@jwt_required()
+def profile():
+    currentUserId = get_jwt_identity()
+    user = User.query.get(currentUserId)
+    
+    if not user:
+        return jsonify({"msg": "User not found"}), 404
+
+    # Send user details as response
+    return jsonify({
+        "userName": user.userName,
+        "email": user.email,
+        "name": user.name,
+        "lastName": user.lastName,
+        "age": user.age,
+        "registrationDate": user.registrationDate  
+    }), 200
+
+@auth.route('/profile', methods=['PUT'])
+@jwt_required()
+def update_profile():
+    current_user_id = get_jwt_identity()
+    user = User.query.get(current_user_id)
+
+    if not user:
+        return jsonify({"msg": "User not found"}), 404
+
+    # Get updated data from request
+    data = request.get_json()
+    user.name = data.get('name', user.name)
+    user.lastName = data.get('lastName', user.lastName)
+    user.age = data.get('age', user.age)
+
+    # Save changes
+    db.session.commit()
+
+    return jsonify({"msg": "Profile updated successfully"}), 200

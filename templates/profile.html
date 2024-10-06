@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <button id="logoutButton" class="btn btn-danger">Logout</button>
+        <h1>User Profile</h1>
+        <div id="profile-info">
+            <p><strong>Username:</strong> <span id="userName"></span></p>
+            <p><strong>Email:</strong> <span id="email"></span></p>
+            <p><strong>Name:</strong> <span id="name"></span></p>
+            <p><strong>Last Name:</strong> <span id="lastName"></span></p>
+            <p><strong>Age:</strong> <span id="age"></span></p>
+        </div>
+
+        <h2>Edit Profile</h2>
+        <form id="edit-profile-form">
+            <div class="form-group">
+                <label for="name">Name</label>
+                <input type="text" class="form-control" id="nameInput" placeholder="Enter name">
+            </div>
+            <div class="form-group">
+                <label for="lastName">Last Name</label>
+                <input type="text" class="form-control" id="lastNameInput" placeholder="Enter last name">
+            </div>
+            <div class="form-group">
+                <label for="age">Age</label>
+                <input type="number" class="form-control" id="ageInput" placeholder="Enter age">
+            </div>
+            <button type="submit" class="btn btn-primary">Update Profile</button>
+        </form>
+
+        <p id="message"></p>
+    </div>
+
+    <script>
+
+        document.getElementById('logoutButton').addEventListener('click', function() {
+            // Clear the token from localStorage
+            localStorage.removeItem('token');
+
+            // Redirect to the login page
+            window.location.href = '/auth/login';
+        });
+
+        const token = localStorage.getItem('token');  // Retrieve the JWT token from localStorage
+
+        // Check if token is available
+        if (!token) {
+            console.error('Token not found. Redirecting to login...');
+            window.location.href = '/login';  // Redirect to login if no token is found
+        } else {
+            console.log('Token found:', token);
+        }
+
+        // Fetch profile data
+        function loadProfile() {
+            fetch('/auth/profile', {
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Bearer ' + token  // Attach the JWT token in the Authorization header
+                }
+            })
+            .then(response => {
+                if (!response.ok) {  // If token is invalid or expired
+                    console.error('Invalid or expired token. Redirecting to login...');
+                    window.location.href = '/login';  // Redirect to login page if unauthorized
+                    return;
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data) {
+                    // Display user data on the profile page
+                    document.getElementById('userName').innerText = data.userName;
+                    document.getElementById('email').innerText = data.email;
+                    document.getElementById('name').innerText = data.name;
+                    document.getElementById('lastName').innerText = data.lastName;
+                    document.getElementById('age').innerText = data.age;
+
+                    // Pre-fill the form inputs with the current user data
+                    document.getElementById('nameInput').value = data.name;
+                    document.getElementById('lastNameInput').value = data.lastName;
+                    document.getElementById('ageInput').value = data.age;
+                }
+            })
+            .catch(error => console.error('Error loading profile:', error));  // Handle errors
+        }
+
+        // Handle form submission to update profile
+        document.getElementById('edit-profile-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            // Collect updated data from the form
+            const updatedData = {
+                name: document.getElementById('nameInput').value,
+                lastName: document.getElementById('lastNameInput').value,
+                age: document.getElementById('ageInput').value
+            };
+
+            // Send updated profile data to the backend
+            fetch('/auth/profile', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token  // Attach the JWT token in the Authorization header
+                },
+                body: JSON.stringify(updatedData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    console.error('Error updating profile:', response.statusText);
+                    document.getElementById('message').innerText = 'Failed to update profile.';
+                    return;
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data) {
+                    document.getElementById('message').innerText = 'Profile updated successfully!';
+                    loadProfile();  // Refresh the profile info
+                }
+            })
+            .catch(error => console.error('Error updating profile:', error));  // Handle errors
+        });
+
+        // Load the profile data when the page loads
+        window.onload = loadProfile;
+    </script>
+</body>
+</html>
