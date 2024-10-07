@@ -6,6 +6,8 @@ from datetime import timedelta
 from backend.emailUtils import sendEmail  # Import the sendEmail function from email_utils.py
 from backend.models.user import User  # Import the User model to interact with user data.
 from backend import db  # Import the database instance for interacting with the database.
+from backend.rateLimiter import limiter
+
 
 # Create a Blueprint for authentication-related routes.
 auth = Blueprint('auth', __name__)
@@ -64,19 +66,22 @@ def login_page():
     return render_template('login.html')  # Render the login form HTML
 
 
-# POST route to handle login logic (already implemented)
+# POST route to handle login 
 @auth.route('/login', methods=['POST'])
+@limiter.limit("2 per minute")  # Limits login attempts to 10 per minute
 def login():
     data = request.get_json()
     email = data.get('email')
     password = data.get('password')
 
-    # Fetch user and validate the password
+    # Find user by email and validate password
     user = User.query.filter_by(email=email).first()
     if user and check_password_hash(user.password, password):
-        access_token = create_access_token(identity=user.id, expires_delta=timedelta(minutes=30))
-        return jsonify(access_token=access_token), 200
+        # Generate access token for authenticated user
+        accessToken = create_access_token(identity=user.id, expires_delta=timedelta(minutes=30))
+        return jsonify(accessToken=accessToken), 200
 
+    # Invalid login attempt
     return jsonify({"msg": "Invalid email or password"}), 401
 
 @auth.route('/profile-page', methods=['GET'])

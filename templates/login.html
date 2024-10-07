@@ -37,17 +37,17 @@
     <script>
         // Wait for the DOM to load
         document.addEventListener('DOMContentLoaded', function () {
-
+    
             // Handle login form submission
             document.getElementById('loginForm').addEventListener('submit', function (e) {
                 e.preventDefault();  // Prevent default form submission
-
+    
                 // Collect email and password values
                 const loginData = {
                     email: document.getElementById('emailInput').value,
                     password: document.getElementById('passwordInput').value
                 };
-
+    
                 // Send POST request to login
                 fetch('/auth/login', {
                     method: 'POST',
@@ -56,27 +56,36 @@
                     },
                     body: JSON.stringify(loginData)
                 })
-                .then(response => response.json())
+                .then(response => {
+                    if (response.status === 429) {
+                        // Rate limit reached
+                        document.getElementById('message').innerText = 'Too many attempts. Please try again later.';
+                        return null;  // Stop further processing
+                    }
+                    return response.json();
+                })
                 .then(data => {
-                    if (data.access_token) {
+                    if (data && data.access_token) {
                         // Store JWT token in localStorage
                         localStorage.setItem('token', data.access_token);
-
+    
                         // Show success message and redirect
                         document.getElementById('message').innerText = 'Login successful! Redirecting...';
                         setTimeout(() => {
                             window.location.href = '/auth/profile-page';
                         }, 1000);
-                    } else {
-                        // Show error message
+                    } else if (data) {
+                        // Show error message for invalid login
                         document.getElementById('message').innerText = 'Login failed! Please try again.';
                     }
                 })
                 .catch(error => {
                     console.error('Error during login:', error);
+                    document.getElementById('message').innerText = 'An error occurred.';
                 });
             });
         });
     </script>
+    
 </body>
 </html>

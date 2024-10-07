@@ -5,6 +5,8 @@ from flask_jwt_extended import JWTManager
 from config.config import Config
 from backend import db, migrate, init_app  # Import from backend/__init__.py
 from backend.auth import auth as auth_blueprint  # Import the auth blueprint
+from backend.rateLimiter import initRateLimiter  # Correct the import path here
+
 
 # Load environment variables from .env file
 load_dotenv()
@@ -25,6 +27,9 @@ init_app(app)
 
 # Initialize JWT manager
 jwt = JWTManager(app)
+
+#Rate Limiter
+limiter = initRateLimiter(app)
 
 # Register the auth blueprint
 app.register_blueprint(auth_blueprint, url_prefix='/auth')
