@@ -21,6 +21,12 @@
                 <input type="password" class="form-control" id="passwordInput" placeholder="Enter password">
             </div>
             <button type="submit" class="btn btn-primary">Login</button>
+
+            <!-- Forgot password button -->
+            <a href="/auth/request-password-reset" class="btn btn-link">Forgot Password?</a>
+
+            <!-- Register button -->
+            <a href="/auth/register" class="btn btn-secondary">Register Here</a>
         </form>
 
         <!-- Message area for login status -->
@@ -28,50 +34,46 @@
     </div>
 
     <!-- JavaScript at the bottom to ensure it runs after the page loads -->
-
-    
     <script>
         // Wait for the DOM to load
         document.addEventListener('DOMContentLoaded', function () {
 
-            // Handle the login form submission
+            // Handle login form submission
             document.getElementById('loginForm').addEventListener('submit', function (e) {
                 e.preventDefault();  // Prevent default form submission
 
-                // Collect email and password values from the form
+                // Collect email and password values
                 const loginData = {
                     email: document.getElementById('emailInput').value,
                     password: document.getElementById('passwordInput').value
                 };
 
-                // Send a POST request to the backend for login
+                // Send POST request to login
                 fetch('/auth/login', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'  // Specify that we are sending JSON
+                        'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(loginData)  // Send the login data in JSON format
+                    body: JSON.stringify(loginData)
                 })
-                .then(response => response.json())  // Parse the response as JSON
+                .then(response => response.json())
                 .then(data => {
-                    if (data.access_token) {  // If login is successful and we receive an access token
-                        // Store the JWT token in localStorage
+                    if (data.access_token) {
+                        // Store JWT token in localStorage
                         localStorage.setItem('token', data.access_token);
 
-                        // Show success message
+                        // Show success message and redirect
                         document.getElementById('message').innerText = 'Login successful! Redirecting...';
-                        
-                        // Redirect to the new profile-page after 1 second
                         setTimeout(() => {
-                            window.location.href = '/auth/profile-page';  // Redirect to the profile-page
+                            window.location.href = '/auth/profile-page';
                         }, 1000);
                     } else {
-                        // If login failed, show error message
+                        // Show error message
                         document.getElementById('message').innerText = 'Login failed! Please try again.';
                     }
                 })
                 .catch(error => {
-                    console.error('Error during login:', error);  // Log any error that happens during login
+                    console.error('Error during login:', error);
                 });
             });
         });

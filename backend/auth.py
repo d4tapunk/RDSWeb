@@ -3,6 +3,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from datetime import timedelta
+from backend.emailUtils import sendEmail  # Import the sendEmail function from email_utils.py
 from backend.models.user import User  # Import the User model to interact with user data.
 from backend import db  # Import the database instance for interacting with the database.
 
@@ -52,6 +53,9 @@ def register():
 
     # Render the registration form
     return render_template('register.html')
+
+
+
 
 
 # GET route to render the login form
@@ -118,3 +122,63 @@ def update_profile():
     db.session.commit()
 
     return jsonify({"msg": "Profile updated successfully"}), 200
+
+
+
+
+@auth.route('/reset-password', methods=['GET'])
+def showResetPasswordForm():
+    token = request.args.get('token')  # Extract token from the query parameter
+    return render_template('resetPassword.html', token=token)  # Pass token to the form
+
+
+
+# Route to handle password reset requests
+@auth.route('/request-password-reset', methods=['POST'])
+def handlePasswordResetRequest():
+    data = request.get_json()  # Expecting JSON data from frontend
+    email = data.get('email')
+
+    if not email:
+        return jsonify({"msg": "Email is missing"}), 400
+
+    # Find the user by email
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        return jsonify({"msg": "User not found"}), 404
+
+    # Generate a password reset token
+    resetToken = create_access_token(identity=user.id, expires_delta=timedelta(minutes=30))
+
+    # Create the password reset link
+    resetLink = f"http://localhost:5000/auth/reset-password?token={resetToken}"
+
+    # Send the reset link to the user's email
+    sendEmail(user.email, "Password Reset Request", f"Click the link to reset your password: {resetLink}")
+
+    return jsonify({"message": "Password reset link sent to your email"}), 200
+
+
+
+
+@auth.route('/reset-password', methods=['POST'])
+@jwt_required()
+def resetPassword():
+    data = request.get_json()
+    newPassword = data.get('newPassword')
+
+    if not newPassword:
+        return jsonify({"msg": "New password is required"}), 400
+
+    # Get the user ID from the JWT token
+    userId = get_jwt_identity()
+    user = User.query.get(userId)
+
+    if not user:
+        return jsonify({"msg": "User not found"}), 404
+
+    # Update the user's password
+    user.password = generate_password_hash(newPassword)
+    db.session.commit()
+
+    return jsonify({"msg": "Password reset successful"}), 200
