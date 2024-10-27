@@ -1,0 +1,263 @@
+openapi: "3.0.0"
+info:
+  title: "User Authentication and Profile Management API"
+  version: "1.0.0"
+  description: "This API handles user registration, login, profile management, and password reset functionalities."
+
+servers:
+  - url: "http://localhost:5000"
+    description: "Local server"
+
+paths:
+  /auth/register:
+    post:
+      summary: "Register a new user"
+      tags:
+        - "Authentication"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+      responses:
+        "200":
+          description: "User registered successfully"
+        "400":
+          description: "Missing required fields or user already exists"
+
+  /auth/login:
+    post:
+      summary: "User login"
+      tags:
+        - "Authentication"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: "Login successful"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "401":
+          description: "Invalid email or password"
+
+  /auth/profile-page:
+    get:
+      summary: "Render profile page"
+      tags:
+        - "Profile"
+      responses:
+        "200":
+          description: "Profile page rendered successfully"
+
+  /auth/profile:
+    get:
+      summary: "Get user profile"
+      tags:
+        - "Profile"
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: "Profile information retrieved successfully"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProfileResponse"
+        "404":
+          description: "User not found"
+
+    put:
+      summary: "Update user profile"
+      tags:
+        - "Profile"
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProfileRequest"
+      responses:
+        "200":
+          description: "Profile updated successfully"
+        "404":
+          description: "User not found"
+
+  /auth/request-password-reset:
+    get:
+      summary: "Render password reset request form"
+      tags:
+        - "Password Reset"
+      responses:
+        "200":
+          description: "Password reset request form rendered successfully"
+
+    post:
+      summary: "Request password reset link"
+      tags:
+        - "Password Reset"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PasswordResetRequest"
+      responses:
+        "200":
+          description: "Password reset link sent to email"
+        "400":
+          description: "Email is required"
+        "404":
+          description: "User not found"
+
+  /auth/reset-password:
+    get:
+      summary: "Render reset password form"
+      tags:
+        - "Password Reset"
+      parameters:
+        - name: "token"
+          in: "query"
+          description: "Password reset token"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "200":
+          description: "Password reset form rendered successfully"
+
+    post:
+      summary: "Reset user password"
+      tags:
+        - "Password Reset"
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResetPasswordRequest"
+      responses:
+        "200":
+          description: "Password reset successful"
+        "400":
+          description: "New password is required"
+        "404":
+          description: "User not found"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    RegisterRequest:
+      type: object
+      properties:
+        userName:
+          type: string
+          example: "new_user"
+        email:
+          type: string
+          example: "user@example.com"
+        password:
+          type: string
+          example: "securePassword123"
+        name:
+          type: string
+          example: "John"
+        lastName:
+          type: string
+          example: "Doe"
+        age:
+          type: integer
+          example: 25
+      required:
+        - userName
+        - email
+        - password
+
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          example: "user@example.com"
+        password:
+          type: string
+          example: "securePassword123"
+      required:
+        - email
+        - password
+
+    LoginResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+    ProfileResponse:
+      type: object
+      properties:
+        userName:
+          type: string
+          example: "new_user"
+        email:
+          type: string
+          example: "user@example.com"
+        name:
+          type: string
+          example: "John"
+        lastName:
+          type: string
+          example: "Doe"
+        age:
+          type: integer
+          example: 25
+        registrationDate:
+          type: string
+          format: date-time
+          example: "2023-09-01T12:34:56Z"
+
+    UpdateProfileRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "John"
+        lastName:
+          type: string
+          example: "Doe"
+        age:
+          type: integer
+          example: 30
+
+    PasswordResetRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          example: "user@example.com"
+      required:
+        - email
+
+    ResetPasswordRequest:
+      type: object
+      properties:
+        newPassword:
+          type: string
+          example: "newSecurePassword123"
+      required:
+        - newPassword

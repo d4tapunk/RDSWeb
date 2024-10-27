@@ -8,12 +8,19 @@ from backend import db, migrate, init_app  # Import from backend/__init__.py
 from backend.auth import auth as auth_blueprint  # Import the auth blueprint
 from backend.rateLimiter import initRateLimiter  # Correct the import path here
 
-
 # Load environment variables from .env file
 load_dotenv()
 
 app = Flask(__name__, template_folder='../templates')
-swagger = Swagger(app)
+
+# Set Swagger options and template file for OpenAPI 3.0
+swagger_file_path = os.path.abspath(os.path.join("config", "swagger.yml"))
+app.config['SWAGGER'] = {
+    'title': 'User Authentication and Profile Management API',
+    'uiversion': 3,
+    'openapi': '3.0.0'
+}
+swagger = Swagger(app, template_file=swagger_file_path)
 
 # Set the secret key for session handling (important for flashing messages)
 app.secret_key = os.getenv('SECRET_KEY')
@@ -30,7 +37,7 @@ init_app(app)
 # Initialize JWT manager
 jwt = JWTManager(app)
 
-#Rate Limiter
+# Rate Limiter
 limiter = initRateLimiter(app)
 
 # Register the auth blueprint
