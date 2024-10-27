@@ -5,9 +5,56 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Profile</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: #f8f9fa;
+            font-family: 'Consolas', monospace;
+        }
+        .container {
+            max-width: 600px;
+            background-color: #ffffff;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        h1, h2 {
+            font-size: 1.75rem;
+            color: #343a40;
+            margin-bottom: 1rem;
+        }
+        #profile-info p {
+            font-size: 1rem;
+            color: #495057;
+            text-align: left;
+            margin: 0.5rem 0;
+        }
+        label {
+            font-weight: bold;
+        }
+        #message {
+            margin-top: 1rem;
+            color: #28a745;
+        }
+        .btn {
+            font-family: 'Consolas', monospace;
+        }
+        #logoutButton {
+            float: right;
+            margin-top: -1rem;
+        }
+        /* Apply Consolas font to all input elements */
+        input, label, button, .form-control {
+            font-family: 'Consolas', monospace !important;
+        }
+    </style>
 </head>
 <body>
-    <div class="container mt-5">
+    <div class="container">
         <button id="logoutButton" class="btn btn-danger">Logout</button>
         <h1>User Profile</h1>
         <div id="profile-info">
@@ -39,76 +86,60 @@
     </div>
 
     <script>
-
         document.getElementById('logoutButton').addEventListener('click', function() {
-            // Clear the token from localStorage
             localStorage.removeItem('token');
-
-            // Redirect to the login page
             window.location.href = '/auth/login';
         });
 
-        const token = localStorage.getItem('token');  // Retrieve the JWT token from localStorage
-
-        // Check if token is available
+        const token = localStorage.getItem('token');
         if (!token) {
             console.error('Token not found. Redirecting to login...');
-            window.location.href = '/login';  // Redirect to login if no token is found
-        } else {
-            console.log('Token found:', token);
+            window.location.href = '/login';
         }
 
-        // Fetch profile data
         function loadProfile() {
             fetch('/auth/profile', {
                 method: 'GET',
-                headers: {
-                    'Authorization': 'Bearer ' + token  // Attach the JWT token in the Authorization header
-                }
+                headers: { 'Authorization': 'Bearer ' + token }
             })
             .then(response => {
-                if (!response.ok) {  // If token is invalid or expired
+                if (!response.ok) {
                     console.error('Invalid or expired token. Redirecting to login...');
-                    window.location.href = '/login';  // Redirect to login page if unauthorized
+                    window.location.href = '/login';
                     return;
                 }
                 return response.json();
             })
             .then(data => {
                 if (data) {
-                    // Display user data on the profile page
                     document.getElementById('userName').innerText = data.userName;
                     document.getElementById('email').innerText = data.email;
                     document.getElementById('name').innerText = data.name;
                     document.getElementById('lastName').innerText = data.lastName;
                     document.getElementById('age').innerText = data.age;
 
-                    // Pre-fill the form inputs with the current user data
                     document.getElementById('nameInput').value = data.name;
                     document.getElementById('lastNameInput').value = data.lastName;
                     document.getElementById('ageInput').value = data.age;
                 }
             })
-            .catch(error => console.error('Error loading profile:', error));  // Handle errors
+            .catch(error => console.error('Error loading profile:', error));
         }
 
-        // Handle form submission to update profile
         document.getElementById('edit-profile-form').addEventListener('submit', function (e) {
             e.preventDefault();
 
-            // Collect updated data from the form
             const updatedData = {
                 name: document.getElementById('nameInput').value,
                 lastName: document.getElementById('lastNameInput').value,
                 age: document.getElementById('ageInput').value
             };
 
-            // Send updated profile data to the backend
             fetch('/auth/profile', {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + token  // Attach the JWT token in the Authorization header
+                    'Authorization': 'Bearer ' + token
                 },
                 body: JSON.stringify(updatedData)
             })
@@ -123,13 +154,12 @@
             .then(data => {
                 if (data) {
                     document.getElementById('message').innerText = 'Profile updated successfully!';
-                    loadProfile();  // Refresh the profile info
+                    loadProfile();
                 }
             })
-            .catch(error => console.error('Error updating profile:', error));  // Handle errors
+            .catch(error => console.error('Error updating profile:', error));
         });
 
-        // Load the profile data when the page loads
         window.onload = loadProfile;
     </script>
 </body>

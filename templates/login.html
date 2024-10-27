@@ -4,12 +4,49 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
-    <!-- Bootstrap for styling -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: #f8f9fa;
+            font-family: 'Consolas', monospace;
+        }
+        .container {
+            max-width: 400px;
+            background-color: #ffffff;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        h1 {
+            font-size: 1.75rem;
+            margin-bottom: 1.5rem;
+            color: #343a40;
+        }
+        .form-group label {
+            font-weight: bold;
+        }
+        .btn {
+            font-family: 'Consolas', monospace;
+        }
+        #message {
+            margin-top: 1rem;
+            color: #dc3545; /* Red color for error or status messages */
+        }
+        /* Ensure Consolas font on input elements */
+        input, label, button, .form-control {
+            font-family: 'Consolas', monospace !important;
+        }
+    </style>
 </head>
 <body>
-    <div class="container mt-5">
+    <div class="container">
         <h1>Login</h1>
+        
         <!-- Login form -->
         <form id="loginForm">
             <div class="form-group">
@@ -20,78 +57,64 @@
                 <label for="password">Password</label>
                 <input type="password" class="form-control" id="passwordInput" name="password" placeholder="Enter password" required>
             </div>
-            <button type="submit" class="btn btn-primary">Login</button>
+            <button type="submit" class="btn btn-primary btn-block">Login</button>
 
             <!-- Forgot password button -->
             <a href="/auth/request-password-reset" class="btn btn-link">Forgot Password?</a>
 
             <!-- Register button -->
-            <a href="/auth/register" class="btn btn-secondary">Register Here</a>
+            <a href="/auth/register" class="btn btn-secondary btn-block">Register Here</a>
         </form>
 
         <!-- Area to display login status messages -->
         <p id="message"></p>
     </div>
 
-    <!-- JavaScript should load at the bottom to avoid blocking the page rendering -->
     <script>
-        // Wait for the DOM to finish loading
         document.addEventListener('DOMContentLoaded', function () {
-    
-            // Handle the form submission when the user clicks "Login"
             document.getElementById('loginForm').addEventListener('submit', function (e) {
-                e.preventDefault();  // Prevent the form from submitting the old-fashioned way
-    
-                // Collect email and password entered by the user
+                e.preventDefault();
+
                 const loginData = {
                     email: document.getElementById('emailInput').value,
                     password: document.getElementById('passwordInput').value
                 };
-    
-                // Send the email and password to the server via POST request
+
                 fetch('/auth/login', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'  // Specify the format of the request body
+                        'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(loginData)  // Convert the login data to JSON format
+                    body: JSON.stringify(loginData)
                 })
                 .then(response => {
                     if (response.status === 429) {
-                        // Too many login attempts were made, rate limiting
                         document.getElementById('message').innerText = 'Too many attempts. Please try again later.';
-                        return;  // Stop further processing if rate limited
+                        return;
                     }
                     if (response.status === 401) {
-                        // Incorrect email or password
                         document.getElementById('message').innerText = 'Invalid email or password!';
                         return;
                     }
-                    return response.json();  // Process the response body
+                    return response.json();
                 })
                 .then(data => {
                     if (data && data.access_token) {
-                        // Save the JWT token to localStorage for authentication
                         localStorage.setItem('token', data.access_token);
-    
-                        // Show success message and redirect the user to their profile page
                         document.getElementById('message').innerText = 'Login successful! Redirecting...';
                         setTimeout(() => {
                             window.location.href = '/auth/profile-page';
-                        }, 1000);  // Redirect after a short delay
+                        }, 1000);
                     } else if (data) {
-                        // Show an error message if login was unsuccessful
                         document.getElementById('message').innerText = 'Login failed! Please try again.';
                     }
                 })
                 .catch(error => {
-                    // Catch and log any unexpected errors during the request
                     console.error('Error during login:', error);
                     document.getElementById('message').innerText = 'An error occurred.';
                 });
             });
         });
     </script>
-    
 </body>
 </html>

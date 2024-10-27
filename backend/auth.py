@@ -155,7 +155,7 @@ def handle_password_reset_request():
     email = data.get('email')
 
     if not email:
-        return jsonify({"msg": "Email is missing"}), 400
+        return jsonify({"msg": "Email is required"}), 400
 
     # Find the user by email
     user = User.query.filter_by(email=email).first()
