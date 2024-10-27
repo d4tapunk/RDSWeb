@@ -1,5 +1,6 @@
 from dotenv import load_dotenv
 import os
+from flasgger import Swagger
 from flask import Flask
 from flask_jwt_extended import JWTManager
 from config.config import Config
@@ -12,6 +13,7 @@ from backend.rateLimiter import initRateLimiter  # Correct the import path here
 load_dotenv()
 
 app = Flask(__name__, template_folder='../templates')
+swagger = Swagger(app)
 
 # Set the secret key for session handling (important for flashing messages)
 app.secret_key = os.getenv('SECRET_KEY')
