@@ -14,11 +14,11 @@
         <form id="loginForm">
             <div class="form-group">
                 <label for="email">Email</label>
-                <input type="email" class="form-control" id="emailInput" placeholder="Enter email">
+                <input type="email" class="form-control" id="emailInput" name="email" placeholder="Enter email" required>
             </div>
             <div class="form-group">
                 <label for="password">Password</label>
-                <input type="password" class="form-control" id="passwordInput" placeholder="Enter password">
+                <input type="password" class="form-control" id="passwordInput" name="password" placeholder="Enter password" required>
             </div>
             <button type="submit" class="btn btn-primary">Login</button>
 
@@ -29,57 +29,63 @@
             <a href="/auth/register" class="btn btn-secondary">Register Here</a>
         </form>
 
-        <!-- Message area for login status -->
+        <!-- Area to display login status messages -->
         <p id="message"></p>
     </div>
 
-    <!-- JavaScript at the bottom to ensure it runs after the page loads -->
+    <!-- JavaScript should load at the bottom to avoid blocking the page rendering -->
     <script>
-        // Wait for the DOM to load
+        // Wait for the DOM to finish loading
         document.addEventListener('DOMContentLoaded', function () {
     
-            // Handle login form submission
+            // Handle the form submission when the user clicks "Login"
             document.getElementById('loginForm').addEventListener('submit', function (e) {
-                e.preventDefault();  // Prevent default form submission
+                e.preventDefault();  // Prevent the form from submitting the old-fashioned way
     
-                // Collect email and password values
+                // Collect email and password entered by the user
                 const loginData = {
                     email: document.getElementById('emailInput').value,
                     password: document.getElementById('passwordInput').value
                 };
     
-                // Send POST request to login
+                // Send the email and password to the server via POST request
                 fetch('/auth/login', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json'  // Specify the format of the request body
                     },
-                    body: JSON.stringify(loginData)
+                    body: JSON.stringify(loginData)  // Convert the login data to JSON format
                 })
                 .then(response => {
                     if (response.status === 429) {
-                        // Rate limit reached
+                        // Too many login attempts were made, rate limiting
                         document.getElementById('message').innerText = 'Too many attempts. Please try again later.';
-                        return null;  // Stop further processing
+                        return;  // Stop further processing if rate limited
                     }
-                    return response.json();
+                    if (response.status === 401) {
+                        // Incorrect email or password
+                        document.getElementById('message').innerText = 'Invalid email or password!';
+                        return;
+                    }
+                    return response.json();  // Process the response body
                 })
                 .then(data => {
                     if (data && data.access_token) {
-                        // Store JWT token in localStorage
+                        // Save the JWT token to localStorage for authentication
                         localStorage.setItem('token', data.access_token);
     
-                        // Show success message and redirect
+                        // Show success message and redirect the user to their profile page
                         document.getElementById('message').innerText = 'Login successful! Redirecting...';
                         setTimeout(() => {
                             window.location.href = '/auth/profile-page';
-                        }, 1000);
+                        }, 1000);  // Redirect after a short delay
                     } else if (data) {
-                        // Show error message for invalid login
+                        // Show an error message if login was unsuccessful
                         document.getElementById('message').innerText = 'Login failed! Please try again.';
                     }
                 })
                 .catch(error => {
+                    // Catch and log any unexpected errors during the request
                     console.error('Error during login:', error);
                     document.getElementById('message').innerText = 'An error occurred.';
                 });

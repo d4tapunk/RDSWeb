@@ -12,6 +12,9 @@ class User(db.Model):
     lastName = db.Column(db.String(50), nullable=True)
     age = db.Column(db.Integer, nullable=True)
     registrationDate = db.Column(db.DateTime, default=func.now(), nullable=False)
+    resetToken = db.Column(db.String(512), nullable=True)
+    tokenUsed = db.Column(db.Boolean, default=False)
+    resetTokenCreatedAt = db.Column(db.DateTime, default=datetime.utcnow)
 
     def __init__(self, **kwargs):
         super(User, self).__init__(**kwargs)
