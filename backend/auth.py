@@ -184,6 +184,8 @@ def handle_password_reset_request():
     return jsonify({"message": "Password reset link sent to your email"}), 200
 
 
+from backend.emailUtils import sendEmail  # Ensure this is imported
+
 # POST route to handle password reset (JWT protected)
 @auth.route('/reset-password', methods=['POST'])
 @jwt_required()
@@ -205,4 +207,14 @@ def reset_password():
     user.password = generate_password_hash(new_password)
     db.session.commit()
 
-    return jsonify({"msg": "Password reset successful"}), 200
+    # Send email with the new password
+    try:
+        sendEmail(
+            user.email,
+            "Your Password Has Been Reset",
+            f"Hello {user.userName},\n\nYour password has been successfully reset. Your new password is: {new_password}\n\nPlease keep it secure."
+        )
+        return jsonify({"msg": "Password reset successful! An email with your new password has been sent."}), 200
+    except Exception as e:
+        print(f"Failed to send email: {e}")
+        return jsonify({"msg": "Password reset successful, but failed to send email."}), 200
