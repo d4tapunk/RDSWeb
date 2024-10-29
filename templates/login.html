@@ -99,8 +99,8 @@
                     return response.json();
                 })
                 .then(data => {
-                    if (data && data.access_token) {
-                        localStorage.setItem('token', data.access_token);
+                    if (data && data.accessToken) {  // Updated to match backend key
+                        localStorage.setItem('token', data.accessToken);
                         document.getElementById('message').innerText = 'Login successful! Redirecting...';
                         setTimeout(() => {
                             window.location.href = '/auth/profile-page';

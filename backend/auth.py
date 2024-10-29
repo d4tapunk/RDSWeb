@@ -8,13 +8,16 @@ from backend.models.user import User  # Import the User model to interact with u
 from backend import db  # Import the database instance for interacting with the database.
 from backend.rateLimiter import limiter
 
+# ------------------ Blueprint Setup ------------------
 
 # Create a Blueprint for authentication-related routes.
 auth = Blueprint('auth', __name__)
 
-# Define the route for user registration.
+# ------------------ User Registration ------------------
+
 @auth.route('/register', methods=['GET', 'POST'])
 def register():
+    """Register a new user."""
     if request.method == 'POST':  # Handle form submission
         userName = request.form.get('userName')  
         email = request.form.get('email')  
@@ -56,42 +59,67 @@ def register():
     # Render the registration form
     return render_template('register.html')
 
-
-
-
+# ------------------ Login ------------------
 
 # GET route to render the login form
 @auth.route('/login', methods=['GET'])
 def login_page():
+    """Render the login form."""
     return render_template('login.html')  # Render the login form HTML
 
-
-# POST route to handle login 
+# POST route to handle login
 @auth.route('/login', methods=['POST'])
-@limiter.limit("2 per minute")  # Limits login attempts to 10 per minute
+@limiter.limit("10 per minute")  # Limits login attempts to 2 per minute
 def login():
+    """Authenticate user and provide JWT access token."""
     data = request.get_json()
+    
+    # Ensure data is received correctly
+    if not data:
+        print("Error: Missing JSON in request")  # Debugging statement
+        return jsonify({"msg": "Missing JSON in request"}), 400
+
     email = data.get('email')
     password = data.get('password')
 
-    # Find user by email and validate password
-    user = User.query.filter_by(email=email).first()
-    if user and check_password_hash(user.password, password):
-        # Generate access token for authenticated user
-        accessToken = create_access_token(identity=user.id, expires_delta=timedelta(minutes=30))
-        return jsonify(accessToken=accessToken), 200
+    # Verify both email and password are provided
+    if not email or not password:
+        print("Error: Email and password are required")  # Debugging statement
+        return jsonify({"msg": "Email and password are required"}), 400
 
-    # Invalid login attempt
+    # Attempt to retrieve user by email
+    user = User.query.filter_by(email=email).first()
+    if user is None:
+        print(f"Error: User not found with email {email}")  # Debugging statement
+        return jsonify({"msg": "Invalid email or password"}), 401
+
+    print("Retrieved user:", user.userName)  # Confirm user retrieval
+
+    # Check if password is correct
+    if check_password_hash(user.password, password):
+        # Generate access token for authenticated user
+        access_token = create_access_token(identity=user.id, expires_delta=timedelta(minutes=30))
+        print("Login successful, access token generated")  # Debugging statement
+        return jsonify(accessToken=access_token), 200
+
+    # Invalid login attempt if password hash does not match
+    print("Error: Invalid email or password")  # Debugging statement
     return jsonify({"msg": "Invalid email or password"}), 401
+
+
+
+
+# ------------------ Profile Management ------------------
 
 @auth.route('/profile-page', methods=['GET'])
 def profile_page():
+    """Render the profile page."""
     return render_template('profile.html')  
-
 
 @auth.route('/profile', methods=['GET'])
 @jwt_required()
 def profile():
+    """Retrieve user profile information."""
     currentUserId = get_jwt_identity()
     user = User.query.get(currentUserId)
     
@@ -111,6 +139,7 @@ def profile():
 @auth.route('/profile', methods=['PUT'])
 @jwt_required()
 def update_profile():
+    """Update user profile information."""
     current_user_id = get_jwt_identity()
     user = User.query.get(current_user_id)
 
@@ -128,19 +157,18 @@ def update_profile():
 
     return jsonify({"msg": "Profile updated successfully"}), 200
 
+# ------------------ Password Reset ------------------
 
+# GET route to render the password reset request form
+@auth.route('/request-password-reset', methods=['GET'])
+def show_password_reset_request_form():
+    """Render the password reset request form."""
+    return render_template('requestPasswordReset.html')
 
-
-@auth.route('/reset-password', methods=['GET'])
-def showResetPasswordForm():
-    token = request.args.get('token')  # Extract token from the query parameter
-    return render_template('resetPassword.html', token=token)  # Pass token to the form
-
-
-
-# Route to handle password reset requests
+# POST route to handle password reset requests
 @auth.route('/request-password-reset', methods=['POST'])
-def handlePasswordResetRequest():
+def handle_password_reset_request():
+    """Send a password reset link to the user's email."""
     data = request.get_json()  # Expecting JSON data from frontend
     email = data.get('email')
 
@@ -163,12 +191,18 @@ def handlePasswordResetRequest():
 
     return jsonify({"message": "Password reset link sent to your email"}), 200
 
+# GET route to render the password reset form with token
+@auth.route('/reset-password', methods=['GET'])
+def show_reset_password_form():
+    """Render the reset password form."""
+    token = request.args.get('token')  # Extract token from the query parameter
+    return render_template('resetPassword.html', token=token)  # Pass token to the form
 
-
-
+# POST route to handle password reset using token
 @auth.route('/reset-password', methods=['POST'])
 @jwt_required()
-def resetPassword():
+def reset_password():
+    """Reset the user's password."""
     data = request.get_json()
     newPassword = data.get('newPassword')
 
