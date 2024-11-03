@@ -13,6 +13,7 @@ Flask-Migrate==4.0.7
 Flask-SQLAlchemy==3.1.1
 greenlet==3.1.1
 importlib_resources==6.4.5
+iniconfig==2.0.0
 itsdangerous==2.2.0
 Jinja2==3.1.4
 jsonschema==4.23.0
@@ -25,9 +26,11 @@ mdurl==0.1.2
 mistune==3.0.2
 ordered-set==4.1.0
 packaging==24.1
+pluggy==1.5.0
 psycopg2-binary==2.9.9
 Pygments==2.18.0
 PyJWT==2.9.0
+pytest==8.3.3
 python-dotenv==1.0.1
 PyYAML==6.0.2
 referencing==0.35.1
